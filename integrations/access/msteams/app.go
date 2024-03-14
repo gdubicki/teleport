@@ -67,7 +67,7 @@ func NewApp(conf Config) (*App, error) {
 // Run starts the main job process
 func (a *App) Run(ctx context.Context) error {
 	log := logger.Get(ctx)
-	log.Infof("Starting Teleport MS Teams Plugin %s:%s", Version, Gitref)
+	log.Info("Starting Teleport MS Teams Plugin")
 
 	err := a.init(ctx)
 	if err != nil {

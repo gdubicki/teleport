@@ -28,8 +28,8 @@ import (
 	"github.com/gravitational/teleport/integrations/lib/plugindata"
 )
 
-// validate installs the application for a user if required and sends the Hello, world! message
-func validate(configPath, recipient string) error {
+// Validate installs the application for a user if required and sends the Hello, world! message
+func Validate(configPath, recipient string) error {
 
 	ctx := context.Background()
 	b, _, err := loadConfig(configPath)

@@ -53,8 +53,8 @@ type payload struct {
 	TeamsAppID string
 }
 
-// configure creates required template files
-func configure(targetDir, appID, appSecret, tenantID string) error {
+// Configure creates required template files
+func Configure(targetDir, appID, appSecret, tenantID string) error {
 	var step byte = 1
 
 	p := payload{

@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func uninstall(ctx context.Context, configPath string) error {
+func Uninstall(ctx context.Context, configPath string) error {
 	b, c, err := loadConfig(configPath)
 	if err != nil {
 		return trace.Wrap(err)

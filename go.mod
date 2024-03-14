@@ -29,6 +29,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161
 	github.com/ClickHouse/ch-go v0.61.3
 	github.com/ClickHouse/clickhouse-go/v2 v2.19.0
+	github.com/DanielTitkov/go-adaptive-cards v0.2.2
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Microsoft/go-winio v0.6.1
@@ -168,6 +169,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spiffe/go-spiffe/v2 v2.1.7
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/gjson v1.17.1
 	github.com/tiktoken-go/tokenizer v0.1.0
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/vulcand/predicate v1.2.0 // replaced
@@ -229,8 +231,6 @@ require (
 	github.com/mailgun/metrics v0.0.0-20150124003306-2b3c4565aafd // indirect
 	github.com/mailgun/minheap v0.0.0-20170619185613-3dbe6c6bf55f // indirect
 )
-
-require github.com/DanielTitkov/go-adaptive-cards v0.2.2
 
 require (
 	cloud.google.com/go v0.112.0 // indirect
@@ -476,6 +476,8 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/thales-e-security/pool v0.0.2 // indirect
 	github.com/theupdateframework/go-tuf v0.7.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 // indirect
 	github.com/transparency-dev/merkle v0.0.2 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
