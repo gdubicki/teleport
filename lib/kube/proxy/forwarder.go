@@ -36,6 +36,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	gwebsocket "github.com/gorilla/websocket"
 	"github.com/gravitational/trace"
 	"github.com/gravitational/ttlmap"
 	"github.com/jonboulle/clockwork"
@@ -50,8 +51,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/apimachinery/pkg/util/httpstream/wsstream"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
+	kwebsocket "k8s.io/client-go/transport/websocket"
 	kubeexec "k8s.io/client-go/util/exec"
 
 	"github.com/gravitational/teleport"
@@ -2035,7 +2038,60 @@ func (f *Forwarder) catchAll(authCtx *authContext, w http.ResponseWriter, req *h
 	}
 }
 
+func (f *Forwarder) getWebsocketExecutor(sess *clusterSession, req *http.Request) (remotecommand.Executor, error) {
+	f.log.Debugf("Creating websocket remote executor for request %s %s", req.Method, req.RequestURI)
+
+	tlsConfig, useImpersonation, err := f.getTLSConfig(sess)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	upgradeRoundTripper := NewWebsocketRoundTripperWithDialer(roundTripperConfig{
+		ctx:                   req.Context(),
+		sess:                  sess,
+		dialWithContext:       sess.DialWithContext(),
+		tlsConfig:             tlsConfig,
+		originalHeaders:       req.Header,
+		useIdentityForwarding: useImpersonation,
+		proxier:               sess.getProxier(),
+	})
+	rt := http.RoundTripper(upgradeRoundTripper)
+	if sess.kubeAPICreds != nil {
+		var err error
+		rt, err = sess.kubeAPICreds.wrapTransport(rt)
+		if err != nil {
+			return nil, trace.Wrap(err)
+		}
+	}
+	rt = tracehttp.NewTransport(rt)
+
+	cfg := &rest.Config{
+		// WrapTransport will replace default roundTripper created for the WebsocketExecutor
+		// and on successfully established connection we will set upgrader's websocket connection.
+		WrapTransport: func(baseRt http.RoundTripper) http.RoundTripper {
+			if wrt, ok := baseRt.(*kwebsocket.RoundTripper); ok {
+				upgradeRoundTripper.onConnected = func(wsConn *gwebsocket.Conn) {
+					wrt.Conn = wsConn
+				}
+			}
+
+			return rt
+		},
+	}
+
+	return remotecommand.NewWebSocketExecutor(cfg, req.Method, req.URL.String())
+}
+
 func (f *Forwarder) getExecutor(sess *clusterSession, req *http.Request) (remotecommand.Executor, error) {
+	if wsstream.IsWebSocketRequestWithStreamCloseProtocol(req) {
+		return f.getWebsocketExecutor(sess, req)
+	}
+	return f.getSPDYExecutor(sess, req)
+}
+
+func (f *Forwarder) getSPDYExecutor(sess *clusterSession, req *http.Request) (remotecommand.Executor, error) {
+	f.log.Debugf("Creating SPDY remote executor for request %s %s", req.Method, req.RequestURI)
+
 	tlsConfig, useImpersonation, err := f.getTLSConfig(sess)
 	if err != nil {
 		return nil, trace.Wrap(err)

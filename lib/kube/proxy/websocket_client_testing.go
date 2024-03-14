@@ -84,6 +84,12 @@ func withLocalPortforwarding(port int32, readyChan chan struct{}) websocketOptio
 	}
 }
 
+func withSupportedProtocols(protocols []string) websocketOption {
+	return func(c *wsStreamClient) {
+		c.protocols = protocols
+	}
+}
+
 // newWebSocketClient allows running exec commands via Websocket protocol.
 // The existing code exists for tests purpose where the final endpoint is a fictional Kubernetes API.
 // The code in question should never be used outside testing.

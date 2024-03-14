@@ -37,6 +37,7 @@ const (
 	preV4Base64WebsocketProtocol = wsstream.Base64ChannelWebSocketProtocol
 	v4BinaryWebsocketProtocol    = "v4." + wsstream.ChannelWebSocketProtocol
 	v4Base64WebsocketProtocol    = "v4." + wsstream.Base64ChannelWebSocketProtocol
+	v5BinaryWebsocketProtocol    = "v5." + wsstream.ChannelWebSocketProtocol
 )
 
 func init() {
@@ -108,6 +109,10 @@ func createWebSocketStreams(req remoteCommandRequest) (*remoteCommandProxy, erro
 			Binary:   false,
 			Channels: channels,
 		},
+		v5BinaryWebsocketProtocol: {
+			Binary:   true,
+			Channels: channels,
+		},
 	})
 	conn.SetIdleTimeout(IdleTimeout)
 	negotiatedProtocol, streams, err := conn.Open(
@@ -153,7 +158,7 @@ func createWebSocketStreams(req remoteCommandRequest) (*remoteCommandProxy, erro
 	}
 
 	switch negotiatedProtocol {
-	case v4BinaryWebsocketProtocol, v4Base64WebsocketProtocol:
+	case v5BinaryWebsocketProtocol, v4BinaryWebsocketProtocol, v4Base64WebsocketProtocol:
 		proxy.writeStatus = v4WriteStatusFunc(streams[errorChannel])
 	default:
 		proxy.writeStatus = v1WriteStatusFunc(streams[errorChannel])
