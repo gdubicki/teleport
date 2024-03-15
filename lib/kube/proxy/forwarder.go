@@ -2048,6 +2048,7 @@ func (f *Forwarder) getWebsocketExecutor(sess *clusterSession, req *http.Request
 
 	upgradeRoundTripper := NewWebsocketRoundTripperWithDialer(roundTripperConfig{
 		ctx:                   req.Context(),
+		log:                   f.log,
 		sess:                  sess,
 		dialWithContext:       sess.DialWithContext(),
 		tlsConfig:             tlsConfig,

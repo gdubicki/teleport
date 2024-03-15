@@ -24,7 +24,6 @@ import (
 
 	gwebsocket "github.com/gorilla/websocket"
 	"github.com/gravitational/trace"
-	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	kwebsocket "k8s.io/client-go/transport/websocket"
@@ -60,7 +59,7 @@ func (w *WebsocketRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 	// request headers. This is necessary to forward the original user's impersonation
 	// when multiple kubernetes_users are available.
 	copyImpersonationHeaders(header, w.originalHeaders)
-	if err := setupImpersonationHeaders(log.StandardLogger(), w.sess, header); err != nil {
+	if err := setupImpersonationHeaders(w.log, w.sess, header); err != nil {
 		return nil, trace.Wrap(err)
 	}
 
