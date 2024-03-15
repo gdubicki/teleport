@@ -101,8 +101,8 @@ So we check if there's a CRD already deployed, it that's the case, we keep the C
   {{- end -}}
 {{- end -}}
 
-{{- /* This template check if a known CRD is depployed (rolev7) and owned by
-the release. As CRDs are not namespaced, we must use a custum annotation to avoid
+{{- /* This template checks if a known CRD is depployed (rolev7) and owned by
+the release. As CRDs are not namespaced, we must use a custom annotation to avoid
 a conflict when two releases are deployed with the same name in different namespaces. */ -}}
 {{- define "teleport-cluster.operator.checkExistingCRDs" -}}
   {{ $existingCRD := lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "teleportrolesv7.resources.teleport.dev"}}
