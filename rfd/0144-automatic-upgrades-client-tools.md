@@ -80,7 +80,7 @@ if they are not a LTE connection or public WiFi.
 $ tsh login --proxy=proxy.example.com
 Updating client tools to vX.Y.Z.
 Update progress: [▒▒▒▒▒▒     ] (Ctrl-C to Cancel)
-WARNING: Client tools update failed: some functionality may not work.
+WARNING: Client tools failed to update, some functionality maybe broken.
 
 [...]
 ```
@@ -121,12 +121,25 @@ be served off the point endpoint or should we put it elsewhere?
 
 TODO(russjones): (Teradata) Track state of upgrades within schedule resource?
 
+https://github.com/gravitational/teleport/pull/22850/files
+message ClusterMaintenanceConfigSpecV1 {
+message AgentUpgradeWindow {
+  // UTCStartHour is the start hour of the maintenance window in UTC.
+  uint32 UTCStartHour = 1 [(gogoproto.jsontag) = "utc_start_hour"];
+  // Weekdays is an optional list of weekdays. If not specified, an agent upgrade window
+  // occurs every day.
+  repeated string Weekdays = 2 [(gogoproto.jsontag) = "weekdays,omitempty"];
+
+
 ```yaml
 kind: version_directive (or version-controller or version-control-config)
 version: v3
 metadata:
   name: version-directive
 spec:
+  upgrade_window_start: "08:00:00"
+
+
   # server_version is a semver formatted strings that represents the version
   # of Teleport all agents should be running.
   server_version: x.y.z
