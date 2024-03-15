@@ -118,13 +118,13 @@ a conflict when two releases are deployed with the same name in different namesp
   {{- end -}}
 {{- end -}}
 
-{{ /* This is a custom label containing the namespaced release.
+{{- /* This is a custom label containing the namespaced release.
 This is used to avoid conflicts for non-namespaced resources like CRDs. */ -}}
 {{- define "teleport-cluster.operator.namespacedRelease" -}}
   {{ .Release.Namespace }}/{{ .Release.Name }}
 {{- end -}}
 
-{{ /* This is the object merged with CRDs manifests to enrich them (add labels). */ -}}
+{{- /* This is the object merged with CRDs manifests to enrich them (add labels). */ -}}
 {{- define "teleport-cluster.operator.crdOverrides" -}}
 metadata:
   labels: {{- include "teleport-cluster.operator.labels" . | nindent 4 }}
