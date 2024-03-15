@@ -25,7 +25,7 @@ tests:
     asserts:
       - equal:
           path: metadata.labels.[teleport.dev/release]
-          value: NAMESPACE/RELEASE-NAME
+          value: NAMESPACE_RELEASE-NAME
   - it: creates CRDs when installCRDs is "dynamic" and operator enabled
     set:
       installCRDs: "dynamic"

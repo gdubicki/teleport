@@ -110,7 +110,7 @@ a conflict when two releases are deployed with the same name in different namesp
     false
   {{- else -}}
     {{- $release := index $existingCRD.metadata.labels "teleport.dev/release" }}
-    {{- if eq $release (include "teleport-cluster.operator.namespacedRelease") -}}
+    {{- if eq $release (include "teleport-cluster.operator.namespacedRelease" .) -}}
       true
     {{- else -}}
     false
@@ -121,7 +121,7 @@ a conflict when two releases are deployed with the same name in different namesp
 {{- /* This is a custom label containing the namespaced release.
 This is used to avoid conflicts for non-namespaced resources like CRDs. */ -}}
 {{- define "teleport-cluster.operator.namespacedRelease" -}}
-  {{ .Release.Namespace }}/{{ .Release.Name }}
+  {{ .Release.Namespace }}_{{ .Release.Name }}
 {{- end -}}
 
 {{- /* This is the object merged with CRDs manifests to enrich them (add labels). */ -}}
