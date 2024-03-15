@@ -2084,10 +2084,20 @@ func (f *Forwarder) getWebsocketExecutor(sess *clusterSession, req *http.Request
 }
 
 func (f *Forwarder) getExecutor(sess *clusterSession, req *http.Request) (remotecommand.Executor, error) {
-	if wsstream.IsWebSocketRequestWithStreamCloseProtocol(req) {
-		return f.getWebsocketExecutor(sess, req)
+	spdyExec, err := f.getSPDYExecutor(sess, req)
+	if err != nil {
+		return nil, trace.Wrap(err)
 	}
-	return f.getSPDYExecutor(sess, req)
+	if wsstream.IsWebSocketRequestWithStreamCloseProtocol(req) {
+		wsExec, err := f.getWebsocketExecutor(sess, req)
+		if err != nil {
+			return nil, trace.Wrap(err)
+		}
+		return remotecommand.NewFallbackExecutor(wsExec, spdyExec, func(err error) bool {
+			return true
+		})
+	}
+	return spdyExec, nil
 }
 
 func (f *Forwarder) getSPDYExecutor(sess *clusterSession, req *http.Request) (remotecommand.Executor, error) {
