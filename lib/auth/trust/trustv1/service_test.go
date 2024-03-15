@@ -21,6 +21,7 @@ package trustv1
 import (
 	"context"
 	"crypto/x509/pkix"
+	"fmt"
 	"testing"
 	"time"
 
@@ -653,6 +654,7 @@ func TestDeleteCertAuthority(t *testing.T) {
 				Domain: "unknown",
 			},
 			assertion: func(t *testing.T, err error) {
+				fmt.Printf("---> %v\n", err)
 				require.True(t, trace.IsNotFound(err))
 			},
 		},
