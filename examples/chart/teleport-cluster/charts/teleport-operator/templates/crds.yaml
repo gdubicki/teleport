@@ -1,0 +1,11 @@
+{{- if eq (include "teleport-cluster.operator.shouldInstallCRDs" . ) "true" -}}
+{{ $currentScope := .}}
+{{ range $path, $_ :=  .Files.Glob  "operator-crds/*" }}
+  {{- with $currentScope}}
+    {{- $crd := (.Files.Get $path | fromYaml) -}}
+    {{- $injectedCRD := mustMergeOverwrite $crd (include "teleport-cluster.operator.crdOverrides" $currentScope | fromYaml) -}}
+    {{- toYaml $injectedCRD -}}
+  {{- end }}
+---
+{{ end }}
+{{- end -}}

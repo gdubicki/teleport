@@ -1,38 +1,24 @@
-{{/*
-  Deploy the CRD if 'installCRDs' is set to "always", or if 'installCRD' is set
-  to "dynamic" and either 'enabled' is true or the CRD is already present.
-*/}}
-{{- if or
-  (eq .Values.installCRDs "always")
-  (and
-    (eq .Values.installCRDs "dynamic")
-    (or
-      .Values.enabled
-      (lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "teleportgithubconnectors.resources.teleport.dev")
-    )
-  )
-}}
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: teleportgithubconnectors.resources.teleport.dev
+  name: teleportusers.resources.teleport.dev
 spec:
   group: resources.teleport.dev
   names:
-    kind: TeleportGithubConnector
-    listKind: TeleportGithubConnectorList
-    plural: teleportgithubconnectors
+    kind: TeleportUser
+    listKind: TeleportUserList
+    plural: teleportusers
     shortNames:
-    - githubconnector
-    - githubconnectors
-    singular: teleportgithubconnector
+    - user
+    - users
+    singular: teleportuser
   scope: Namespaced
   versions:
-  - name: v3
+  - name: v2
     schema:
       openAPIV3Schema:
-        description: GithubConnector is the Schema for the githubconnectors API
+        description: User is the Schema for the users API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -47,48 +33,76 @@ spec:
           metadata:
             type: object
           spec:
-            description: GithubConnector resource definition v3 from Teleport
+            description: User resource definition v2 from Teleport
             properties:
-              api_endpoint_url:
-                description: APIEndpointURL is the URL of the API endpoint of the
-                  Github instance this connector is for.
-                type: string
-              client_id:
-                description: ClientID is the Github OAuth app client ID.
-                type: string
-              client_secret:
-                description: ClientSecret is the Github OAuth app client secret.
-                type: string
-              display:
-                description: Display is the connector display name.
-                type: string
-              endpoint_url:
-                description: EndpointURL is the URL of the GitHub instance this connector
-                  is for.
-                type: string
-              redirect_url:
-                description: RedirectURL is the authorization callback URL.
-                type: string
-              teams_to_roles:
-                description: TeamsToRoles maps Github team memberships onto allowed
-                  roles.
+              github_identities:
+                description: GithubIdentities list associated Github OAuth2 identities
+                  that let user log in using externally verified identity
                 items:
                   properties:
-                    organization:
-                      description: Organization is a Github organization a user belongs
-                        to.
+                    connector_id:
+                      description: ConnectorID is id of registered OIDC connector,
+                        e.g. 'google-example.com'
                       type: string
-                    roles:
-                      description: Roles is a list of allowed logins for this org/team.
-                      items:
-                        type: string
-                      nullable: true
-                      type: array
-                    team:
-                      description: Team is a team within the organization a user belongs
-                        to.
+                    username:
+                      description: Username is username supplied by external identity
+                        provider
                       type: string
                   type: object
+                type: array
+              oidc_identities:
+                description: OIDCIdentities lists associated OpenID Connect identities
+                  that let user log in using externally verified identity
+                items:
+                  properties:
+                    connector_id:
+                      description: ConnectorID is id of registered OIDC connector,
+                        e.g. 'google-example.com'
+                      type: string
+                    username:
+                      description: Username is username supplied by external identity
+                        provider
+                      type: string
+                  type: object
+                type: array
+              roles:
+                description: Roles is a list of roles assigned to user
+                items:
+                  type: string
+                nullable: true
+                type: array
+              saml_identities:
+                description: SAMLIdentities lists associated SAML identities that
+                  let user log in using externally verified identity
+                items:
+                  properties:
+                    connector_id:
+                      description: ConnectorID is id of registered OIDC connector,
+                        e.g. 'google-example.com'
+                      type: string
+                    username:
+                      description: Username is username supplied by external identity
+                        provider
+                      type: string
+                  type: object
+                type: array
+              traits:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: Traits are key/value pairs received from an identity
+                  provider (through OIDC claims or SAML assertions) or from a system
+                  administrator for local accounts. Traits are used to populate role
+                  variables.
+                type: object
+              trusted_device_ids:
+                description: TrustedDeviceIDs contains the IDs of trusted devices
+                  enrolled by the user. Managed by the Device Trust subsystem, avoid
+                  manual edits.
+                items:
+                  type: string
+                nullable: true
                 type: array
             type: object
           status:
@@ -180,4 +194,3 @@ status:
     plural: ""
   conditions: null
   storedVersions: null
-{{- end }}

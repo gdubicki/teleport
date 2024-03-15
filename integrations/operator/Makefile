@@ -98,10 +98,8 @@ manifests: crdgen controller-gen ## Generate WebhookConfiguration, ClusterRole a
 			"$${proto}"; \
 	done
 
-	go run ../../build.assets/tooling/cmd/render-helm-crds/main.go \
-		-source ./config/crd/bases \
-		-destination ../../examples/chart/teleport-cluster/charts/teleport-operator/templates
-
+	rm -r ../../examples/chart/teleport-cluster/charts/teleport-operator/operator-crds/
+	cp -r ./config/crd/bases/ ../../examples/chart/teleport-cluster/charts/teleport-operator/operator-crds
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

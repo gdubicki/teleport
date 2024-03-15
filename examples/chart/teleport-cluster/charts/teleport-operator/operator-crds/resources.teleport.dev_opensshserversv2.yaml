@@ -1,38 +1,24 @@
-{{/*
-  Deploy the CRD if 'installCRDs' is set to "always", or if 'installCRD' is set
-  to "dynamic" and either 'enabled' is true or the CRD is already present.
-*/}}
-{{- if or
-  (eq .Values.installCRDs "always")
-  (and
-    (eq .Values.installCRDs "dynamic")
-    (or
-      .Values.enabled
-      (lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "teleportgithubconnectors.resources.teleport.dev")
-    )
-  )
-}}
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: teleportoktaimportrules.resources.teleport.dev
+  name: teleportopensshserversv2.resources.teleport.dev
 spec:
   group: resources.teleport.dev
   names:
-    kind: TeleportOktaImportRule
-    listKind: TeleportOktaImportRuleList
-    plural: teleportoktaimportrules
+    kind: TeleportOpenSSHServerV2
+    listKind: TeleportOpenSSHServerV2List
+    plural: teleportopensshserversv2
     shortNames:
-    - oktaimportrule
-    - oktaimportrules
-    singular: teleportoktaimportrule
+    - opensshserverv2
+    - opensshserversv2
+    singular: teleportopensshserverv2
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: OktaImportRule is the Schema for the oktaimportrules API
+        description: OpenSSHServerV2 is the Schema for the opensshserversv2 API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -47,66 +33,129 @@ spec:
           metadata:
             type: object
           spec:
-            description: OktaImportRule resource definition v1 from Teleport
+            description: OpenSSHServer resource definition v2 from Teleport
             properties:
-              mappings:
-                description: Mappings is a list of matches that will map match conditions
-                  to labels.
+              addr:
+                description: Addr is a host:port address where this server can be
+                  reached.
+                type: string
+              cloud_metadata:
+                description: CloudMetadata contains info about the cloud instance
+                  the server is running on, if any.
+                nullable: true
+                properties:
+                  aws:
+                    description: AWSInfo contains attributes to match to an EC2 instance.
+                    nullable: true
+                    properties:
+                      account_id:
+                        description: AccountID is an AWS account ID.
+                        type: string
+                      instance_id:
+                        description: InstanceID is an EC2 instance ID.
+                        type: string
+                      integration:
+                        description: Integration is the integration name that added
+                          this Node. When connecting to it, it will use this integration
+                          to issue AWS API calls in order to set up the connection.
+                          This includes sending an SSH Key and then opening a tunnel
+                          (EC2 Instance Connect Endpoint) so Teleport can connect
+                          to it.
+                        type: string
+                      region:
+                        description: Region is the AWS EC2 Instance Region.
+                        type: string
+                      subnet_id:
+                        description: SubnetID is the Subnet ID in use by the instance.
+                        type: string
+                      vpc_id:
+                        description: VPCID is the AWS VPC ID where the Instance is
+                          running.
+                        type: string
+                    type: object
+                type: object
+              hostname:
+                description: Hostname is server hostname
+                type: string
+              peer_addr:
+                description: PeerAddr is the address a proxy server is reachable at
+                  by its peer proxies.
+                type: string
+              proxy_ids:
+                description: ProxyIDs is a list of proxy IDs this server is expected
+                  to be connected to.
                 items:
-                  properties:
-                    add_labels:
-                      description: AddLabels specifies which labels to add if any
-                        of the previous matches match.
-                      nullable: true
-                      properties:
-                        key:
-                          type: string
-                        value:
-                          type: string
-                      type: object
-                    match:
-                      description: Match is a set of matching rules for this mapping.
-                        If any of these match, then the mapping will be applied.
-                      items:
-                        properties:
-                          app_ids:
-                            description: AppIDs is a list of app IDs to match against.
-                            items:
-                              type: string
-                            nullable: true
-                            type: array
-                          app_name_regexes:
-                            description: AppNameRegexes is a list of regexes to match
-                              against app names.
-                            items:
-                              type: string
-                            nullable: true
-                            type: array
-                          group_ids:
-                            description: GroupIDs is a list of group IDs to match
-                              against.
-                            items:
-                              type: string
-                            nullable: true
-                            type: array
-                          group_name_regexes:
-                            description: GroupNameRegexes is a list of regexes to
-                              match against group names.
-                            items:
-                              type: string
-                            nullable: true
-                            type: array
-                        type: object
-                      nullable: true
-                      type: array
-                  type: object
+                  type: string
                 nullable: true
                 type: array
-              priority:
-                description: Priority represents the priority of the rule application.
-                  Lower numbered rules will be applied first.
-                format: int32
-                type: integer
+              public_addrs:
+                description: PublicAddrs is a list of public addresses where this
+                  server can be reached.
+                items:
+                  type: string
+                nullable: true
+                type: array
+              rotation:
+                description: Rotation specifies server rotation
+                properties:
+                  current_id:
+                    description: CurrentID is the ID of the rotation operation to
+                      differentiate between rotation attempts.
+                    type: string
+                  grace_period:
+                    description: GracePeriod is a period during which old and new
+                      CA are valid for checking purposes, but only new CA is issuing
+                      certificates.
+                    format: duration
+                    type: string
+                  last_rotated:
+                    description: LastRotated specifies the last time of the completed
+                      rotation.
+                    format: date-time
+                    type: string
+                  mode:
+                    description: Mode sets manual or automatic rotation mode.
+                    type: string
+                  phase:
+                    description: Phase is the current rotation phase.
+                    type: string
+                  schedule:
+                    description: Schedule is a rotation schedule - used in automatic
+                      mode to switch between phases.
+                    properties:
+                      standby:
+                        description: Standby specifies time to switch to the "Standby"
+                          phase.
+                        format: date-time
+                        type: string
+                      update_clients:
+                        description: UpdateClients specifies time to switch to the
+                          "Update clients" phase
+                        format: date-time
+                        type: string
+                      update_servers:
+                        description: UpdateServers specifies time to switch to the
+                          "Update servers" phase.
+                        format: date-time
+                        type: string
+                    type: object
+                  started:
+                    description: Started is set to the time when rotation has been
+                      started in case if the state of the rotation is "in_progress".
+                    format: date-time
+                    type: string
+                  state:
+                    description: State could be one of "init" or "in_progress".
+                    type: string
+                type: object
+              use_tunnel:
+                description: UseTunnel indicates that connections to this server should
+                  occur over a reverse tunnel.
+                type: boolean
+              version:
+                description: TeleportVersion is the teleport version that the server
+                  is running on
+                type: string
             type: object
           status:
             description: Status defines the observed state of the Teleport resource
@@ -197,4 +246,3 @@ status:
     plural: ""
   conditions: null
   storedVersions: null
-{{- end }}

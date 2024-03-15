@@ -1,38 +1,24 @@
-{{/*
-  Deploy the CRD if 'installCRDs' is set to "always", or if 'installCRD' is set
-  to "dynamic" and either 'enabled' is true or the CRD is already present.
-*/}}
-{{- if or
-  (eq .Values.installCRDs "always")
-  (and
-    (eq .Values.installCRDs "dynamic")
-    (or
-      .Values.enabled
-      (lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "teleportgithubconnectors.resources.teleport.dev")
-    )
-  )
-}}
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: teleportopensshserversv2.resources.teleport.dev
+  name: teleportsamlconnectors.resources.teleport.dev
 spec:
   group: resources.teleport.dev
   names:
-    kind: TeleportOpenSSHServerV2
-    listKind: TeleportOpenSSHServerV2List
-    plural: teleportopensshserversv2
+    kind: TeleportSAMLConnector
+    listKind: TeleportSAMLConnectorList
+    plural: teleportsamlconnectors
     shortNames:
-    - opensshserverv2
-    - opensshserversv2
-    singular: teleportopensshserverv2
+    - samlconnector
+    - samlconnectors
+    singular: teleportsamlconnector
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v2
     schema:
       openAPIV3Schema:
-        description: OpenSSHServerV2 is the Schema for the opensshserversv2 API
+        description: SAMLConnector is the Schema for the samlconnectors API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -47,128 +33,90 @@ spec:
           metadata:
             type: object
           spec:
-            description: OpenSSHServer resource definition v2 from Teleport
+            description: SAMLConnector resource definition v2 from Teleport
             properties:
-              addr:
-                description: Addr is a host:port address where this server can be
-                  reached.
+              acs:
+                description: AssertionConsumerService is a URL for assertion consumer
+                  service on the service provider (Teleport's side).
                 type: string
-              cloud_metadata:
-                description: CloudMetadata contains info about the cloud instance
-                  the server is running on, if any.
-                nullable: true
-                properties:
-                  aws:
-                    description: AWSInfo contains attributes to match to an EC2 instance.
-                    nullable: true
-                    properties:
-                      account_id:
-                        description: AccountID is an AWS account ID.
-                        type: string
-                      instance_id:
-                        description: InstanceID is an EC2 instance ID.
-                        type: string
-                      integration:
-                        description: Integration is the integration name that added
-                          this Node. When connecting to it, it will use this integration
-                          to issue AWS API calls in order to set up the connection.
-                          This includes sending an SSH Key and then opening a tunnel
-                          (EC2 Instance Connect Endpoint) so Teleport can connect
-                          to it.
-                        type: string
-                      region:
-                        description: Region is the AWS EC2 Instance Region.
-                        type: string
-                      subnet_id:
-                        description: SubnetID is the Subnet ID in use by the instance.
-                        type: string
-                      vpc_id:
-                        description: VPCID is the AWS VPC ID where the Instance is
-                          running.
-                        type: string
-                    type: object
-                type: object
-              hostname:
-                description: Hostname is server hostname
-                type: string
-              peer_addr:
-                description: PeerAddr is the address a proxy server is reachable at
-                  by its peer proxies.
-                type: string
-              proxy_ids:
-                description: ProxyIDs is a list of proxy IDs this server is expected
-                  to be connected to.
-                items:
-                  type: string
-                nullable: true
-                type: array
-              public_addrs:
-                description: PublicAddrs is a list of public addresses where this
-                  server can be reached.
-                items:
-                  type: string
-                nullable: true
-                type: array
-              rotation:
-                description: Rotation specifies server rotation
-                properties:
-                  current_id:
-                    description: CurrentID is the ID of the rotation operation to
-                      differentiate between rotation attempts.
-                    type: string
-                  grace_period:
-                    description: GracePeriod is a period during which old and new
-                      CA are valid for checking purposes, but only new CA is issuing
-                      certificates.
-                    format: duration
-                    type: string
-                  last_rotated:
-                    description: LastRotated specifies the last time of the completed
-                      rotation.
-                    format: date-time
-                    type: string
-                  mode:
-                    description: Mode sets manual or automatic rotation mode.
-                    type: string
-                  phase:
-                    description: Phase is the current rotation phase.
-                    type: string
-                  schedule:
-                    description: Schedule is a rotation schedule - used in automatic
-                      mode to switch between phases.
-                    properties:
-                      standby:
-                        description: Standby specifies time to switch to the "Standby"
-                          phase.
-                        format: date-time
-                        type: string
-                      update_clients:
-                        description: UpdateClients specifies time to switch to the
-                          "Update clients" phase
-                        format: date-time
-                        type: string
-                      update_servers:
-                        description: UpdateServers specifies time to switch to the
-                          "Update servers" phase.
-                        format: date-time
-                        type: string
-                    type: object
-                  started:
-                    description: Started is set to the time when rotation has been
-                      started in case if the state of the rotation is "in_progress".
-                    format: date-time
-                    type: string
-                  state:
-                    description: State could be one of "init" or "in_progress".
-                    type: string
-                type: object
-              use_tunnel:
-                description: UseTunnel indicates that connections to this server should
-                  occur over a reverse tunnel.
+              allow_idp_initiated:
+                description: AllowIDPInitiated is a flag that indicates if the connector
+                  can be used for IdP-initiated logins.
                 type: boolean
-              version:
-                description: TeleportVersion is the teleport version that the server
-                  is running on
+              assertion_key_pair:
+                description: EncryptionKeyPair is a key pair used for decrypting SAML
+                  assertions.
+                nullable: true
+                properties:
+                  cert:
+                    description: Cert is a PEM-encoded x509 certificate.
+                    type: string
+                  private_key:
+                    description: PrivateKey is a PEM encoded x509 private key.
+                    type: string
+                type: object
+              attributes_to_roles:
+                description: AttributesToRoles is a list of mappings of attribute
+                  statements to roles.
+                items:
+                  properties:
+                    name:
+                      description: Name is an attribute statement name.
+                      type: string
+                    roles:
+                      description: Roles is a list of static teleport roles to map
+                        to.
+                      items:
+                        type: string
+                      nullable: true
+                      type: array
+                    value:
+                      description: Value is an attribute statement value to match.
+                      type: string
+                  type: object
+                type: array
+              audience:
+                description: Audience uniquely identifies our service provider.
+                type: string
+              cert:
+                description: Cert is the identity provider certificate PEM. IDP signs
+                  <Response> responses using this certificate.
+                type: string
+              display:
+                description: Display controls how this connector is displayed.
+                type: string
+              entity_descriptor:
+                description: EntityDescriptor is XML with descriptor. It can be used
+                  to supply configuration parameters in one XML file rather than supplying
+                  them in the individual elements.
+                type: string
+              entity_descriptor_url:
+                description: EntityDescriptorURL is a URL that supplies a configuration
+                  XML.
+                type: string
+              issuer:
+                description: Issuer is the identity provider issuer.
+                type: string
+              provider:
+                description: Provider is the external identity provider.
+                type: string
+              service_provider_issuer:
+                description: ServiceProviderIssuer is the issuer of the service provider
+                  (Teleport).
+                type: string
+              signing_key_pair:
+                description: SigningKeyPair is an x509 key pair used to sign AuthnRequest.
+                nullable: true
+                properties:
+                  cert:
+                    description: Cert is a PEM-encoded x509 certificate.
+                    type: string
+                  private_key:
+                    description: PrivateKey is a PEM encoded x509 private key.
+                    type: string
+                type: object
+              sso:
+                description: SSO is the URL of the identity provider's SSO service.
                 type: string
             type: object
           status:
@@ -260,4 +208,3 @@ status:
     plural: ""
   conditions: null
   storedVersions: null
-{{- end }}
