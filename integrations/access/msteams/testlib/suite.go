@@ -20,6 +20,7 @@ package testlib
 
 import (
 	"context"
+	"encoding/json"
 	"runtime"
 	"strings"
 	"sync"
@@ -30,7 +31,6 @@ import (
 	"github.com/gravitational/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 
 	"github.com/gravitational/teleport/api/types"
 	"github.com/gravitational/teleport/integrations/access/common"
@@ -113,10 +113,14 @@ func (s *MsTeamsSuite) TestMessagePosting() {
 	msgs, err := s.getNewMessages(ctx, 2)
 	require.NoError(t, err)
 
-	require.Equal(t, gjson.Get(msgs[0].Body, "attachments.0.content.body.0.text").String(), title)
+	var body1 testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgs[0].Body), &body1))
+	body1.checkTitle(t, title)
 	require.Equal(t, msgs[0].RecipientID, s.reviewer1TeamsUser.ID)
 
-	require.Equal(t, gjson.Get(msgs[1].Body, "attachments.0.content.body.0.text").String(), title)
+	var body2 testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgs[1].Body), &body2))
+	body1.checkTitle(t, title)
 	require.Equal(t, msgs[1].RecipientID, s.reviewer2TeamsUser.ID)
 }
 
@@ -142,10 +146,14 @@ func (s *MsTeamsSuite) TestRecipientsConfig() {
 	msgs, err := s.getNewMessages(ctx, 2)
 	require.NoError(t, err)
 
-	require.Equal(t, gjson.Get(msgs[0].Body, "attachments.0.content.body.0.text").String(), title)
+	var body1 testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgs[0].Body), &body1))
+	body1.checkTitle(t, title)
 	require.Equal(t, msgs[0].RecipientID, s.reviewer1TeamsUser.ID)
 
-	require.Equal(t, gjson.Get(msgs[1].Body, "attachments.0.content.body.0.text").String(), title)
+	var body2 testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgs[1].Body), &body2))
+	body1.checkTitle(t, title)
 	require.Equal(t, msgs[1].RecipientID, s.reviewer2TeamsUser.ID)
 }
 
@@ -161,7 +169,8 @@ func (s *MsTeamsSuite) TestApproval() {
 	require.NoError(t, err)
 	require.Equal(t, s.reviewer1TeamsUser.ID, msg.RecipientID)
 
-	err = s.Ruler().ApproveAccessRequest(ctx, req.GetName(), "okay")
+	const reason = "okay"
+	err = s.Ruler().ApproveAccessRequest(ctx, req.GetName(), reason)
 	require.NoError(t, err)
 
 	msgUpdate, err := s.fakeTeams.CheckMessageUpdate(ctx)
@@ -171,9 +180,9 @@ func (s *MsTeamsSuite) TestApproval() {
 	require.Equal(t, msg.ID, msgUpdate.ID)
 
 	require.NoError(t, err)
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.0.items.0.text").String(), "✅")
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.1.items.0.text").String(), "APPROVED")
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.2.facts.4.value").String(), "okay")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgUpdate.Body), &body))
+	body.checkStatusApproved(t, reason)
 }
 
 func (s *MsTeamsSuite) TestDenial() {
@@ -188,7 +197,8 @@ func (s *MsTeamsSuite) TestDenial() {
 	require.NoError(t, err)
 	require.Equal(t, s.reviewer1TeamsUser.ID, msg.RecipientID)
 
-	err = s.Ruler().DenyAccessRequest(ctx, req.GetName(), "not okay")
+	const reason = "not okay"
+	err = s.Ruler().DenyAccessRequest(ctx, req.GetName(), reason)
 	require.NoError(t, err)
 
 	msgUpdate, err := s.fakeTeams.CheckMessageUpdate(ctx)
@@ -198,9 +208,9 @@ func (s *MsTeamsSuite) TestDenial() {
 	require.Equal(t, msg.ID, msgUpdate.ID)
 
 	require.NoError(t, err)
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.0.items.0.text").String(), "❌")
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.1.items.0.text").String(), "DENIED")
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.2.facts.4.value").String(), "not okay")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgUpdate.Body), &body))
+	body.checkStatusDenied(t, reason)
 }
 
 func (s *MsTeamsSuite) TestReviewReplies() {
@@ -236,9 +246,9 @@ func (s *MsTeamsSuite) TestReviewReplies() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.0.value").String(), "✅")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.1.value").String(), integration.Reviewer1UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.3.value").String(), "okay")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 0, true /* approved */, "okay", integration.Reviewer1UserName)
 
 	err = s.Reviewer2().SubmitAccessRequestReview(ctx, req.GetName(), types.AccessReview{
 		Author:        integration.Reviewer2UserName,
@@ -253,9 +263,8 @@ func (s *MsTeamsSuite) TestReviewReplies() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.0.value").String(), "❌")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.1.value").String(), integration.Reviewer2UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.3.value").String(), "not okay")
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 1, false /* approved */, "not okay", integration.Reviewer2UserName)
 }
 
 func (s *MsTeamsSuite) TestApprovalByReview() {
@@ -291,9 +300,9 @@ func (s *MsTeamsSuite) TestApprovalByReview() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.0.value").String(), "✅")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.1.value").String(), integration.Reviewer1UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.3.value").String(), "okay")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 0, true /* approved */, "okay", integration.Reviewer1UserName)
 
 	err = s.Reviewer2().SubmitAccessRequestReview(ctx, req.GetName(), types.AccessReview{
 		Author:        integration.Reviewer2UserName,
@@ -308,11 +317,9 @@ func (s *MsTeamsSuite) TestApprovalByReview() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.0.value").String(), "✅")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.1.value").String(), integration.Reviewer2UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.3.value").String(), "finally okay")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.1.columns.0.items.0.text").String(), "✅")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.1.columns.1.items.0.text").String(), "APPROVED")
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 1, true /* approved */, "finally okay", integration.Reviewer2UserName)
+	body.checkStatusApproved(t, "finally okay")
 }
 
 func (s *MsTeamsSuite) TestDenialByReview() {
@@ -348,9 +355,9 @@ func (s *MsTeamsSuite) TestDenialByReview() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.0.value").String(), "❌")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.1.value").String(), integration.Reviewer1UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.4.facts.3.value").String(), "not okay")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 0, false /* approved */, "not okay", integration.Reviewer1UserName)
 
 	err = s.Reviewer2().SubmitAccessRequestReview(ctx, req.GetName(), types.AccessReview{
 		Author:        integration.Reviewer2UserName,
@@ -365,11 +372,9 @@ func (s *MsTeamsSuite) TestDenialByReview() {
 
 	require.Equal(t, msg.RecipientID, reply.RecipientID)
 	require.Equal(t, msg.ID, reply.ID)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.0.value").String(), "❌")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.1.value").String(), integration.Reviewer2UserName)
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.5.facts.3.value").String(), "finally not okay")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.1.columns.0.items.0.text").String(), "❌")
-	require.Equal(t, gjson.Get(reply.Body, "attachments.0.content.body.1.columns.1.items.0.text").String(), "DENIED")
+	require.NoError(t, json.Unmarshal([]byte(reply.Body), &body))
+	body.checkReview(t, 1, false /* approved */, "finally not okay", integration.Reviewer2UserName)
+	body.checkStatusDenied(t, "finally not okay")
 }
 
 func (s *MsTeamsSuite) TestExpiration() {
@@ -396,8 +401,9 @@ func (s *MsTeamsSuite) TestExpiration() {
 	require.Equal(t, s.reviewer1TeamsUser.ID, msgUpdate.RecipientID)
 	require.Equal(t, msg.ID, msgUpdate.ID)
 
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.0.items.0.text").String(), "⌛")
-	require.Equal(t, gjson.Get(msgUpdate.Body, "attachments.0.content.body.1.columns.1.items.0.text").String(), "EXPIRED")
+	var body testTeamsMessage
+	require.NoError(t, json.Unmarshal([]byte(msgUpdate.Body), &body))
+	body.checkStatusExpired(t)
 }
 func (s *MsTeamsSuite) TestRace() {
 	t := s.T()
@@ -466,7 +472,12 @@ func (s *MsTeamsSuite) TestRace() {
 				return setRaceErr(trace.Errorf("user %s is not found", msg.RecipientID))
 			}
 
-			title := gjson.Get(msg.Body, "attachments.0.content.body.0.text").String()
+			var body testTeamsMessage
+			err = json.Unmarshal([]byte(msg.Body), &body)
+			if err != nil {
+				return setRaceErr(trace.Wrap(err, "unmarshalling message"))
+			}
+			title := body.getTitle()
 			reqID := title[strings.LastIndex(title, " ")+1:]
 
 			if err = s.ClientByName(user.Mail).SubmitAccessRequestReview(ctx, reqID, types.AccessReview{
