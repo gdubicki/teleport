@@ -44,7 +44,8 @@ export function getSalesURL(
 ) {
   let url = UPGRADE_COMMUNITY_URL;
   if (isEnterprise) {
-    url = cfg.isTeam ? UPGRADE_TEAM_URL : UPGRADE_IGS_URL;
+    // TODO: new URL for other products
+    url = cfg.productTier === 'midmarket' ? UPGRADE_TEAM_URL : UPGRADE_IGS_URL;
   }
   const params = getParams(version, isEnterprise, event);
   return `${url}?${params}`;

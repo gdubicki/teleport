@@ -57,6 +57,5 @@ export default function useSessions(ctx: Ctx, clusterId: string) {
     sessions,
     // moderated is available with any enterprise editions
     showModeratedSessionsCTA: !ctx.isEnterprise,
-    showActiveSessionsCTA: ctx.lockedFeatures.activeSessions,
   };
 }

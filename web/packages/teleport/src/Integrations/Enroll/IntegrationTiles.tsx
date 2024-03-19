@@ -39,7 +39,7 @@ export function IntegrationTiles({
   hasIntegrationAccess?: boolean;
   hasExternalAuditStorage?: boolean;
 }) {
-  const isCloudEnterprise = cfg.isCloud && !cfg.isTeam;
+  const isCloudEnterprise = cfg.externalAuditStorage;
   const isOnpremEnterprise = cfg.isEnterprise && !cfg.isCloud;
 
   return (

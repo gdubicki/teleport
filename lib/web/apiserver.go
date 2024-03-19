@@ -1653,6 +1653,18 @@ func (h *Handler) getWebConfig(w http.ResponseWriter, r *http.Request, p httprou
 		h.log.WithError(err).Error("Cannot read target version")
 	}
 
+	isTeam := clusterFeatures.GetProductType() == proto.ProductType_PRODUCT_TYPE_TEAM
+
+	// TODO: move this to method
+	productTier := webclient.ProductTierFree
+	if modules.GetModules().BuildType() == modules.BuildEnterprise {
+		if isTeam {
+			productTier = webclient.ProductTierMidMarket
+		} else {
+			productTier = webclient.ProductTierEnterprise
+		}
+	}
+
 	webCfg := webclient.WebConfig{
 		Auth:                           authSettings,
 		CanJoinSessions:                canJoinSessions,
@@ -1667,13 +1679,26 @@ func (h *Handler) getWebConfig(w http.ResponseWriter, r *http.Request, p httprou
 		AssistEnabled:                  assistEnabled,
 		HideInaccessibleFeatures:       clusterFeatures.GetFeatureHiding(),
 		CustomTheme:                    clusterFeatures.GetCustomTheme(),
-		IsTeam:                         clusterFeatures.GetProductType() == proto.ProductType_PRODUCT_TYPE_TEAM,
+		IsTeam:                         isTeam,
 		IsIGSEnabled:                   clusterFeatures.GetIdentityGovernance(),
 		FeatureLimits: webclient.FeatureLimits{
 			AccessListCreateLimit:               int(clusterFeatures.GetAccessList().GetCreateLimit()),
 			AccessMonitoringMaxReportRangeLimit: int(clusterFeatures.GetAccessMonitoring().GetMaxReportRangeLimit()),
 			AccessRequestMonthlyRequestLimit:    int(clusterFeatures.GetAccessRequests().GetMonthlyRequestLimit()),
 		},
+
+		// TODO(mcbattirola): use new flags to determine the following
+		// properties once they are implemented
+		// TODO: should some of these check for enterprise?
+		// TODO: should we remove isTeam from the ones that we are checking other stuff already?
+		IsStripeManaged:      isTeam,
+		ExternalAuditStorage: clusterFeatures.GetCloud() && !isTeam,
+		PremiumSupport:       !isTeam,
+		AccessRequests:       clusterFeatures.GetAccessRequests().MonthlyRequestLimit > 0 && !isTeam,
+		TrustedDevices:       clusterFeatures.GetDeviceTrust().GetEnabled(),
+		ProductTier:          productTier,
+		OIDC:                 clusterFeatures.GetOIDC(),
+		SAML:                 clusterFeatures.GetSAML(),
 	}
 
 	resource, err := h.cfg.ProxyClient.GetClusterName()

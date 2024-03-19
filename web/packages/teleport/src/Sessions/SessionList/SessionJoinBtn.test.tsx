@@ -34,7 +34,6 @@ test('all participant modes are properly listed and in the correct order', () =>
         sid={'4b038eda-ddca-5533-9a49-3a34f133b5f4'}
         clusterId={'test-cluster'}
         participantModes={['moderator', 'peer', 'observer']}
-        showCTA={false}
         showModeratedCTA={false}
       />
     </ContextProvider>
@@ -74,34 +73,6 @@ test('all participant modes are properly listed and in the correct order', () =>
   ).not.toBeInTheDocument();
 });
 
-test('showCTA does not render a join link for any sessions', () => {
-  const ctx = createTeleportContext();
-  render(
-    <ContextProvider ctx={ctx}>
-      <SessionJoinBtn
-        sid={'4b038eda-ddca-5533-9a49-3a34f133b5f4'}
-        clusterId={'test-cluster'}
-        participantModes={['moderator', 'peer', 'observer']}
-        showCTA={true}
-        showModeratedCTA={false}
-      />
-    </ContextProvider>
-  );
-
-  const joinBtn = screen.queryByText(/Join/i);
-  expect(joinBtn).toBeInTheDocument();
-
-  fireEvent.click(joinBtn);
-
-  expect(screen.queryByText('As an Observer').closest('a')).toBeNull();
-  expect(screen.queryByText('As a Moderator').closest('a')).toBeNull();
-  expect(screen.queryByText('As a Peer').closest('a')).toBeNull();
-
-  expect(
-    screen.getByText('Join Active Sessions with Teleport Enterprise')
-  ).toBeInTheDocument();
-});
-
 test('showModeratedCTA does not render a join link for moderated sessions', () => {
   const ctx = createTeleportContext();
   render(
@@ -110,7 +81,6 @@ test('showModeratedCTA does not render a join link for moderated sessions', () =
         sid={'4b038eda-ddca-5533-9a49-3a34f133b5f4'}
         clusterId={'test-cluster'}
         participantModes={['moderator', 'peer', 'observer']}
-        showCTA={false}
         showModeratedCTA={true}
       />
     </ContextProvider>

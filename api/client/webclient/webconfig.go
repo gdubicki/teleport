@@ -85,7 +85,26 @@ type WebConfig struct {
 	// Typically used with feature teasers if feature is not enabled for the
 	// product type eg: Team product contains teasers to upgrade to Enterprise.
 	FeatureLimits FeatureLimits `json:"featureLimits"`
+	//
+	IsStripeManaged      bool        `json:"isStripeManaged"`
+	ExternalAuditStorage bool        `json:"externalAuditStorage"`
+	PremiumSupport       bool        `json:"premiumSupport"`
+	AccessRequests       bool        `json:"accessRequests"`
+	TrustedDevices       bool        `json:"trustedDevices"`
+	ProductTier          ProductTier `json:"isEnterprise"`
+	OIDC                 bool        `json:"oidc"`
+	SAML                 bool        `json:"saml"`
 }
+
+// TODO move somewhere else, cloud api or modules
+type ProductTier string
+
+const (
+	ProductTierFree       ProductTier = "free"
+	ProductTierMidMarket  ProductTier = "midmarket"
+	ProductTierEnterprise ProductTier = "enterprise"
+	ProductTierInternal   ProductTier = "internal"
+)
 
 // featureLimits define limits for features.
 // Typically used with feature teasers if feature is not enabled for the

@@ -28,8 +28,6 @@ import {
 } from 'teleport/components/Layout';
 import useTeleport from 'teleport/useTeleport';
 import useStickerClusterId from 'teleport/useStickyClusterId';
-import { ButtonLockedFeature } from 'teleport/components/ButtonLockedFeature';
-import { CtaEvent } from 'teleport/services/userEvent';
 
 import SessionList from './SessionList';
 import useSessions from './useSessions';
@@ -42,14 +40,7 @@ export function SessionsContainer() {
 }
 
 export function Sessions(props: ReturnType<typeof useSessions>) {
-  const {
-    ctx,
-    attempt,
-    sessions,
-    showActiveSessionsCTA,
-    showModeratedSessionsCTA,
-    clusterId,
-  } = props;
+  const { ctx, attempt, sessions, showModeratedSessionsCTA, clusterId } = props;
   const [errorMessage, setErrorMessage] = useState('');
 
   return (
@@ -69,16 +60,6 @@ export function Sessions(props: ReturnType<typeof useSessions>) {
         `}
       >
         <FeatureHeaderTitle>Active Sessions</FeatureHeaderTitle>
-        {showActiveSessionsCTA && (
-          <Box width="340px">
-            <ButtonLockedFeature
-              height="36px"
-              event={CtaEvent.CTA_ACTIVE_SESSIONS}
-            >
-              Join Active Sessions With Teleport Enterprise
-            </ButtonLockedFeature>
-          </Box>
-        )}
       </FeatureHeader>
       {!errorMessage && (
         <Box mb={4}>
@@ -99,7 +80,6 @@ export function Sessions(props: ReturnType<typeof useSessions>) {
       {attempt.isSuccess && (
         <SessionList
           sessions={sessions}
-          showActiveSessionsCTA={showActiveSessionsCTA}
           showModeratedSessionsCTA={showModeratedSessionsCTA}
         />
       )}

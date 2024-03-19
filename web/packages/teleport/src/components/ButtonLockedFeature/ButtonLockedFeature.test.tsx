@@ -28,14 +28,14 @@ import { CtaEvent, userEventService } from 'teleport/services/userEvent';
 
 import { ButtonLockedFeature } from './ButtonLockedFeature';
 
-const defaultIsTeamFlag = cfg.isTeam;
+const defaultProductTierFlag = cfg.productTier;
 const defaultIsEnterpriseFlag = cfg.isEnterprise;
 
 describe('buttonLockedFeature', () => {
   afterEach(() => {
     jest.resetAllMocks();
 
-    cfg.isTeam = defaultIsTeamFlag;
+    cfg.productTier = defaultProductTierFlag;
     cfg.isEnterprise = defaultIsEnterpriseFlag;
   });
 
@@ -61,7 +61,7 @@ describe('buttonLockedFeature', () => {
 
   test('it has upgrade-team href for Team Plan', () => {
     const version = ctx.storeUser.state.cluster.authVersion;
-    cfg.isTeam = true;
+    cfg.productTier = 'midmarket';
     cfg.isEnterprise = true;
 
     renderWithContext(
@@ -87,7 +87,7 @@ describe('buttonLockedFeature', () => {
 
   test('it has upgrade-community href for community edition', () => {
     const version = ctx.storeUser.state.cluster.authVersion;
-    cfg.isTeam = false;
+    cfg.productTier = 'free';
     cfg.isEnterprise = false;
     renderWithContext(
       <ButtonLockedFeature noIcon={true}>text</ButtonLockedFeature>,
@@ -118,7 +118,7 @@ describe('buttonLockedFeature', () => {
 
   test('it has upgrade-igs href for Enterprise + IGS Plan', () => {
     const version = ctx.storeUser.state.cluster.authVersion;
-    cfg.isTeam = false;
+    cfg.productTier = 'enterprise';
     cfg.isEnterprise = true;
 
     renderWithContext(

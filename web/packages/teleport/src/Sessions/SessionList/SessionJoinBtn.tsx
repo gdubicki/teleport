@@ -30,13 +30,11 @@ export const SessionJoinBtn = ({
   sid,
   clusterId,
   participantModes,
-  showCTA,
   showModeratedCTA,
 }: {
   sid: string;
   clusterId: string;
   participantModes: ParticipantMode[];
-  showCTA: boolean;
   showModeratedCTA: boolean;
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
@@ -47,17 +45,6 @@ export const SessionJoinBtn = ({
 
   return (
     <JoinMenu anchorEl={anchorEl} setAnchorEl={setAnchorEl}>
-      {showCTA && (
-        <Box mx="12px" my={3}>
-          <ButtonLockedFeature
-            noIcon
-            height="40px"
-            event={CtaEvent.CTA_ACTIVE_SESSIONS}
-          >
-            Join Active Sessions with Teleport Enterprise
-          </ButtonLockedFeature>
-        </Box>
-      )}
       <JoinMenuItem
         title="As an Observer"
         description={modeDescription.observer}
@@ -65,7 +52,7 @@ export const SessionJoinBtn = ({
         hasAccess={participantModes.includes('observer')}
         participantMode="observer"
         key="observer"
-        showCTA={showCTA}
+        showCTA={false}
         closeMenu={closeMenu}
       />
       <JoinMenuItem
@@ -75,7 +62,7 @@ export const SessionJoinBtn = ({
         hasAccess={participantModes.includes('moderator')}
         participantMode="moderator"
         key="moderator"
-        showCTA={showCTA || showModeratedCTA}
+        showCTA={showModeratedCTA}
         closeMenu={closeMenu}
       />
       <JoinMenuItem
@@ -85,7 +72,7 @@ export const SessionJoinBtn = ({
         hasAccess={participantModes.includes('peer')}
         participantMode="peer"
         key="peer"
-        showCTA={showCTA}
+        showCTA={false}
         closeMenu={closeMenu}
       />
       {showModeratedCTA && (
