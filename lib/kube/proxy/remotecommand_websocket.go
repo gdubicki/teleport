@@ -37,7 +37,7 @@ const (
 	preV4Base64WebsocketProtocol = wsstream.Base64ChannelWebSocketProtocol
 	v4BinaryWebsocketProtocol    = "v4." + wsstream.ChannelWebSocketProtocol
 	v4Base64WebsocketProtocol    = "v4." + wsstream.Base64ChannelWebSocketProtocol
-	v5BinaryWebsocketProtocol    = "v5." + wsstream.ChannelWebSocketProtocol
+	v5BinaryWebsocketProtocol    = remotecommand.StreamProtocolV5Name
 )
 
 func init() {
