@@ -141,7 +141,7 @@ func TestExecKubeService(t *testing.T) {
 			name: "Websocket protocol v5",
 			args: args{
 				executorBuilder: func(c *rest.Config, s string, u *url.URL) (remotecommand.Executor, error) {
-					return newWebSocketClient(c, s, u, withSupportedProtocols([]string{v5BinaryWebsocketProtocol}))
+					return remotecommand.NewWebSocketExecutor(c, s, u.String())
 				},
 				config: configWithSingleKubeUser,
 			},
@@ -171,7 +171,7 @@ func TestExecKubeService(t *testing.T) {
 			name: "Websocket protocol v5 for user with multiple kubernetes users",
 			args: args{
 				executorBuilder: func(c *rest.Config, s string, u *url.URL) (remotecommand.Executor, error) {
-					return newWebSocketClient(c, s, u, withSupportedProtocols([]string{v5BinaryWebsocketProtocol}))
+					return remotecommand.NewWebSocketExecutor(c, s, u.String())
 				},
 				config:          configMultiKubeUsers,
 				impersonateUser: "admin",
@@ -189,7 +189,7 @@ func TestExecKubeService(t *testing.T) {
 			name: "Websocket protocol v5 for user with multiple kubernetes users without specifying impersonate user",
 			args: args{
 				executorBuilder: func(c *rest.Config, s string, u *url.URL) (remotecommand.Executor, error) {
-					return newWebSocketClient(c, s, u, withSupportedProtocols([]string{v5BinaryWebsocketProtocol}))
+					return remotecommand.NewWebSocketExecutor(c, s, u.String())
 				},
 				config: configMultiKubeUsers,
 			},
