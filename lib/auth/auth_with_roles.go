@@ -1241,6 +1241,10 @@ func (a *ServerWithRoles) hasWatchPermissionForKind(kind types.WatchKind) error 
 			return nil
 		}
 	case types.KindWebSession:
+		if !kind.LoadSecrets {
+			verb = types.VerbReadNoSecrets
+		}
+
 		var filter types.WebSessionFilter
 		if err := filter.FromMap(kind.Filter); err != nil {
 			return trace.Wrap(err)
@@ -1251,8 +1255,11 @@ func (a *ServerWithRoles) hasWatchPermissionForKind(kind types.WatchKind) error 
 			return nil
 		}
 
-		// Users can watch their own web sessions.
+		// Users can watch their own web sessions without secrets.
 		if filter.User != "" && a.currentUserAction(filter.User) == nil {
+			if !kind.LoadSecrets {
+				return trace.AccessDenied("user cannot watch web session with secrets")
+			}
 			return nil
 		}
 	case types.KindHeadlessAuthentication:
@@ -4603,7 +4610,6 @@ func (a *ServerWithRoles) SetClusterNetworkingConfig(ctx context.Context, newNet
 	}
 
 	return trace.Wrap(err)
-
 }
 
 // ResetClusterNetworkingConfig resets cluster networking configuration to defaults.

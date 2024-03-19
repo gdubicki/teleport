@@ -136,10 +136,10 @@ func ForAuth(cfg Config) Config {
 		{Kind: types.KindAccessRequest},
 		{Kind: types.KindAppServer},
 		{Kind: types.KindApp},
-		{Kind: types.KindWebSession, SubKind: types.KindSAMLIdPSession},
-		{Kind: types.KindWebSession, SubKind: types.KindSnowflakeSession},
-		{Kind: types.KindWebSession, SubKind: types.KindAppSession},
-		{Kind: types.KindWebSession, SubKind: types.KindWebSession},
+		{Kind: types.KindWebSession, SubKind: types.KindSAMLIdPSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindSnowflakeSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindAppSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindWebSession, LoadSecrets: true},
 		{Kind: types.KindWebToken},
 		{Kind: types.KindRemoteCluster},
 		{Kind: types.KindDatabaseServer},
@@ -197,10 +197,10 @@ func ForProxy(cfg Config) Config {
 		{Kind: types.KindTunnelConnection},
 		{Kind: types.KindAppServer},
 		{Kind: types.KindApp},
-		{Kind: types.KindWebSession, SubKind: types.KindSAMLIdPSession},
-		{Kind: types.KindWebSession, SubKind: types.KindSnowflakeSession},
-		{Kind: types.KindWebSession, SubKind: types.KindAppSession},
-		{Kind: types.KindWebSession, SubKind: types.KindWebSession},
+		{Kind: types.KindWebSession, SubKind: types.KindSAMLIdPSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindSnowflakeSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindAppSession, LoadSecrets: true},
+		{Kind: types.KindWebSession, SubKind: types.KindWebSession, LoadSecrets: true},
 		{Kind: types.KindWebToken},
 		{Kind: types.KindRemoteCluster},
 		{Kind: types.KindDatabaseServer},
@@ -973,7 +973,6 @@ func (c *Cache) Start() error {
 		Jitter: retryutils.NewHalfJitter(),
 		Clock:  c.Clock,
 	})
-
 	if err != nil {
 		c.Close()
 		return trace.Wrap(err)
